@@ -4,66 +4,82 @@ import simpleGit from "simple-git";
 import random from "random";
 
 const git = simpleGit();
-const path = "./data.json";
-const TOTAL = 300;
+const path = "./heart2025.json";
 
-// some stylish commit messages
-const messages = [
-  "Shifting the timeline",
-  "Refining the ripple of 2025",
-  "Temporal dust cleanup",
-  "Shaping the year one commit at a time",
-  "Adjusting the continuum",
-  "Forging another echo of 2025",
-  "Minor distortion in the space-time log",
-];
+// Parametric heart curve (scaled for GitHub grid)
+function generateHeartPoints(scale = 0.25, points = 100) {
+  const coords = [];
 
-function randomDate2025() {
-  const randomMonth = random.int(1, 12);
-  const daysInMonth = moment(`2025-${randomMonth}`, "YYYY-MM").daysInMonth();
-  const randomDay = random.int(1, daysInMonth);
+  for (let i = 0; i < points; i++) {
+    let t = Math.PI - (2 * Math.PI * i) / points;
+    let x = 16 * Math.pow(Math.sin(t), 3);
+    let y =
+      13 * Math.cos(t) -
+      5 * Math.cos(2 * t) -
+      2 * Math.cos(3 * t) -
+      Math.cos(4 * t);
 
-  const randomHour = random.int(0, 23);
-  const randomMinute = random.int(0, 59);
-  const randomSecond = random.int(0, 59);
-
-  return moment({
-    year: 2025,
-    month: randomMonth - 1,
-    day: randomDay,
-    hour: randomHour,
-    minute: randomMinute,
-    second: randomSecond,
-  }).format();
+    coords.push({
+      weekOffset: Math.round(x * scale),
+      dayOffset: Math.round(-y * scale),
+    });
+  }
+  return coords;
 }
 
-async function createCommit() {
-  const date = randomDate2025();
-  const commitMessage =
-    messages[random.int(0, messages.length - 1)] +
-    ` (${random.int(1000, 9999)})`;
+function getHeartDates(year, start, end) {
+  const dates = [];
+  const startDate = moment(start);
+  const endDate = moment(end);
 
-  // write file so git detects change
+  const baseWeek = startDate.week();
+  const heartPoints = generateHeartPoints();
+
+  for (const p of heartPoints) {
+    let week = baseWeek + p.weekOffset;
+    let day = p.dayOffset;
+
+    if (day < 0 || day > 6) continue;
+
+    const date = moment().year(year).week(week).day(day);
+
+    if (date.isBetween(startDate, endDate, "day", "[]")) {
+      dates.push(date.format());
+    }
+  }
+
+  return dates;
+}
+
+async function commitOnDate(date) {
+  const commitCount = random.int(2, 5); // stronger green for heart shape
+  const message = `Heart Commit (${date})`;
+
   jsonfile.writeFileSync(path, { date });
 
-  // Force timestamps for git
   process.env.GIT_AUTHOR_DATE = date;
   process.env.GIT_COMMITTER_DATE = date;
 
   await git.add(path);
-  await git.commit(commitMessage, { "--date": date });
+  await git.commit(message, { "--date": date });
 }
 
 async function run() {
-  console.log(`Creating ${TOTAL} random commits in 2025...`);
+  console.log("Generating HEART SHAPE for March–May 2025...");
 
-  for (let i = 0; i < TOTAL; i++) {
-    await createCommit();
-    console.log(`Commit ${i + 1}/${TOTAL} done`);
+  const dates = getHeartDates(
+    2025,
+    "2025-03-01",
+    "2025-05-31"
+  );
+
+  for (const d of dates) {
+    await commitOnDate(d);
+    console.log("Committed:", d);
   }
 
   await git.push();
-  console.log("All commits pushed!");
+  console.log("Heart pattern pushed successfully!");
 }
 
 run();
