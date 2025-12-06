@@ -1,17 +1,42 @@
 import jsonfile from "jsonfile";
 import moment from "moment";
 import simpleGit from "simple-git";
+import random from "random";
 
 const path = "./data.json";
-const date = moment().format();
 
-const data = {
-  date: date,
-};
+// pick random month (1–12)
+const randomMonth = random.int(1, 12);
 
-jsonfile.writeFile(path, data);
+// pick random day depending on month
+const daysInMonth = moment(`2025-${randomMonth}`, "YYYY-MM").daysInMonth();
+const randomDay = random.int(1, daysInMonth);
 
-simpleGit()
-  .add([path])
-  .commit(date, (date, { "--date": date }))
-  .push();
+// random hour, minute, second
+const randomHour = random.int(0, 23);
+const randomMinute = random.int(0, 59);
+const randomSecond = random.int(0, 59);
+
+// build final date in 2025
+const date = moment({
+  year: 2025,
+  month: randomMonth - 1,
+  day: randomDay,
+  hour: randomHour,
+  minute: randomMinute,
+  second: randomSecond,
+}).format();
+
+// random commit message
+const commitMessage = `Random 2025 Commit #${random.int(1000, 9999)}`;
+
+const data = { date };
+
+jsonfile.writeFile(path, data, () => {
+  simpleGit()
+    .add([path])
+    .commit(commitMessage, { "--date": date })
+    .push()
+    .then(() => console.log("Random 2025 commit pushed"))
+    .catch((err) => console.error("Git error:", err));
+});
