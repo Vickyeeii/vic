@@ -5,19 +5,19 @@ import random from "random";
 
 const path = "./data.json";
 
-// pick random month (1–12)
+
 const randomMonth = random.int(1, 12);
 
-// pick random day depending on month
+
 const daysInMonth = moment(`2025-${randomMonth}`, "YYYY-MM").daysInMonth();
 const randomDay = random.int(1, daysInMonth);
 
-// random hour, minute, second
+
 const randomHour = random.int(0, 23);
 const randomMinute = random.int(0, 59);
 const randomSecond = random.int(0, 59);
 
-// build final date in 2025
+
 const date = moment({
   year: 2025,
   month: randomMonth - 1,
